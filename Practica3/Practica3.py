@@ -3,59 +3,61 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # Cargar el dataset
-df = pd.read_csv("tmdb_10000_movies.csv")
+df = pd.read_csv(r"C:\Users\joele\OneDrive\Documentos\FCFM\8semestre\mineria_datos\csv\tmdb_10000_movies_cleaned.csv")
 
-# Asegurar que las columnas clave estén limpias y en el tipo correcto
-df['release_date'] = pd.to_datetime(df['release_date'], errors='coerce')
-df = df.dropna(subset=['release_date', 'popularity', 'vote_average', 'vote_count', 'original_language'])
+# Asegurarse de que los valores nulos no interfieran
+df = df.dropna(subset=['popularity', 'vote_average', 'vote_count', 'original_language'])
 
-# Configuración de estilo
-sns.set(style="whitegrid")
+# Pie Chart: Idiomas más comunes
+top_languages = df['original_language'].value_counts().head(5)
+plt.figure(figsize=(6, 6))
+plt.pie(top_languages, labels=top_languages.index, autopct='%1.1f%%', startangle=140)
+plt.title('Top 5 Idiomas Originales en las Películas')
+plt.savefig("piechart_languages.png")
+plt.show()
+
+# Histogramas de variables numéricas 
+numeric_cols = ['popularity', 'vote_average', 'vote_count']
+for col in numeric_cols:
+    plt.figure(figsize=(8, 5))
+    sns.histplot(df[col], kde=True, bins=30)
+    plt.title(f'Histograma de {col}')
+    plt.xlabel(col)
+    plt.ylabel("Frecuencia")
+    plt.tight_layout()
+    plt.savefig(f"hist_{col}.png")
+    plt.show()
+
+# Boxplots agrupados por idioma 
+for col in numeric_cols:
+    plt.figure(figsize=(12, 6))
+    sns.boxplot(x='original_language', y=col, data=df)
+    plt.title(f'{col} por Idioma Original')
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.savefig(f"boxplot_{col}_by_language.png")
+    plt.show()
+
+# Diagramas de líneas: promedio por idioma 
+for col in numeric_cols:
+    mean_per_lang = df.groupby('original_language')[col].mean().sort_values(ascending=False).head(10)
+    plt.figure(figsize=(10, 5))
+    plt.plot(mean_per_lang.index, mean_per_lang.values, marker='o')
+    plt.title(f'Promedio de {col} por Idioma')
+    plt.xlabel('Idioma')
+    plt.ylabel(f'{col} promedio')
+    plt.grid(True)
+    plt.tight_layout()
+    plt.savefig(f"lineplot_mean_{col}_by_language.png")
+    plt.show()
+
+# Diagrama de dispersión 
 plt.figure(figsize=(10, 6))
-
-# 1. Histograma de la popularidad
-plt.figure(figsize=(10, 6))
-sns.histplot(df['popularity'], bins=30, kde=True, color='skyblue')
-plt.title("Distribución de la Popularidad")
-plt.xlabel("Popularidad")
-plt.ylabel("Frecuencia")
+sns.scatterplot(data=df, x='vote_count', y='popularity', hue='original_language', alpha=0.6)
+plt.title('Relación entre Número de Votos y Popularidad')
+plt.xlabel('Número de Votos')
+plt.ylabel('Popularidad')
+plt.legend(title='Idioma', bbox_to_anchor=(1.05, 1), loc='upper left')
 plt.tight_layout()
+plt.savefig("scatter_votes_vs_popularity.png")
 plt.show()
-
-# 2. Boxplot de las calificaciones promedio
-plt.figure(figsize=(8, 6))
-sns.boxplot(x=df['vote_average'], color='orange')
-plt.title("Boxplot de Calificaciones Promedio")
-plt.xlabel("Calificación Promedio")
-plt.tight_layout()
-plt.show()
-
-# 3. Scatter plot entre popularidad y número de votos
-plt.figure(figsize=(10, 6))
-sns.scatterplot(x='vote_count', y='popularity', data=df, alpha=0.5, edgecolor='w')
-plt.title("Popularidad vs. Número de Votos")
-plt.xlabel("Número de Votos")
-plt.ylabel("Popularidad")
-plt.tight_layout()
-plt.show()
-
-# 4. Pie chart de los 5 idiomas originales más comunes
-plt.figure(figsize=(8, 8))
-top_langs = df['original_language'].value_counts().nlargest(5)
-plt.pie(top_langs, labels=top_langs.index, autopct='%1.1f%%', colors=sns.color_palette('pastel'))
-plt.title("Top 5 Idiomas Originales en Películas")
-plt.tight_layout()
-plt.show()
-
-# 5. Gráfico de línea: cantidad de películas por año
-df['release_year'] = df['release_date'].dt.year
-movies_per_year = df['release_year'].value_counts().sort_index()
-
-plt.figure(figsize=(12, 6))
-sns.lineplot(x=movies_per_year.index, y=movies_per_year.values)
-plt.title("Películas Lanzadas por Año")
-plt.xlabel("Año")
-plt.ylabel("Cantidad de Películas")
-plt.tight_layout()
-plt.show()
-
