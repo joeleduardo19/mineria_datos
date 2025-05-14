@@ -3,39 +3,57 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # Cargar el dataset
-df = pd.read_csv('tmdb_10000_movies_cleaned.csv')
+df = pd.read_csv(r"C:\Users\joele\OneDrive\Documentos\FCFM\8semestre\mineria_datos\csv\tmdb_10000_movies_cleaned.csv")
 
-# Asegurémonos de que las columnas que estamos utilizando existan en el dataset
+# Verificar columnas
+print("Columnas del dataset:")
 print(df.columns)
 
-# Calcular estadísticas descriptivas para las columnas numéricas
-print(df[['budget', 'revenue', 'vote_average', 'popularity']].describe())
+# Estadísticas descriptivas básicas
+print("\nEstadísticas descriptivas:")
+print(df[['vote_average', 'vote_count', 'popularity']].describe())
 
-# Calcular la media, mediana, moda, varianza y desviación estándar para 'budget'
-mean_budget = df['budget'].mean()
-median_budget = df['budget'].median()
-mode_budget = df['budget'].mode()[0]
-variance_budget = df['budget'].var()
-std_dev_budget = df['budget'].std()
+# Medidas de tendencia central y dispersión
+for column in ['vote_average', 'vote_count', 'popularity']:
+    print(f"\n--- {column.upper()} ---")
+    print(f"Media: {df[column].mean():.2f}")
+    print(f"Mediana: {df[column].median():.2f}")
+    print(f"Moda: {df[column].mode().values}")
+    print(f"Varianza: {df[column].var():.2f}")
+    print(f"Desviación estándar: {df[column].std():.2f}")
 
-print(f"Budget - Media: {mean_budget}, Mediana: {median_budget}, Moda: {mode_budget}, Varianza: {variance_budget}, Desviación Estándar: {std_dev_budget}")
+# Agrupar por idioma original y obtener estadísticas
+grouped_lang = df.groupby('original_language')[['vote_average', 'vote_count', 'popularity']].mean().sort_values(by='popularity', ascending=False)
+print("\nEstadísticas agrupadas por idioma original (promedios):")
+print(grouped_lang)
 
-# Agrupar por 'genre' y obtener estadísticas descriptivas
-grouped_by_genre = df.groupby('genre')[['budget', 'revenue', 'vote_average', 'popularity']].describe()
-print(grouped_by_genre)
-
-# Graficar la distribución del presupuesto de las películas (histograma)
+# Histograma de popularidad
 plt.figure(figsize=(10, 6))
-sns.histplot(df['budget'], kde=True)
-plt.title('Distribución del Presupuesto de las Películas')
-plt.xlabel('Presupuesto')
+sns.histplot(df['popularity'], bins=30, kde=True)
+plt.title('Distribución de Popularidad')
+plt.xlabel('Popularidad')
 plt.ylabel('Frecuencia')
+plt.savefig("hist_popularity.png")
 plt.show()
 
-# Graficar la relación entre presupuesto y popularidad (diagrama de dispersión)
+# Boxplot de puntuación por idioma
+plt.figure(figsize=(12, 6))
+sns.boxplot(data=df, x='original_language', y='vote_average')
+plt.title('Distribución de la Calificación Promedio por Idioma')
+plt.xlabel('Idioma Original')
+plt.ylabel('Calificación Promedio')
+plt.xticks(rotation=45)
+plt.tight_layout()
+plt.savefig("boxplot_vote_avg_by_lang.png")
+plt.show()
+
+# Diagrama de dispersión: Popularidad vs. Número de votos
 plt.figure(figsize=(10, 6))
-sns.scatterplot(data=df, x='budget', y='popularity')
-plt.title('Relación entre Presupuesto y Popularidad')
-plt.xlabel('Presupuesto')
+sns.scatterplot(data=df, x='vote_count', y='popularity', hue='original_language', alpha=0.6)
+plt.title('Relación entre Número de Votos y Popularidad')
+plt.xlabel('Número de Votos')
 plt.ylabel('Popularidad')
+plt.legend(title='Idioma', bbox_to_anchor=(1.05, 1), loc='upper left')
+plt.tight_layout()
+plt.savefig("scatter_vote_count_vs_popularity.png")
 plt.show()
